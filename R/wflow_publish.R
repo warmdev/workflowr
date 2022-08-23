@@ -77,7 +77,8 @@ wflow_publish <- function(
   verbose = FALSE,
   # general
   dry_run = FALSE,
-  project = "."
+  project = ".",
+  local = FALSE
   ) {
   # To do:
   # * Warning for cache directories
@@ -165,6 +166,8 @@ wflow_publish <- function(
     s1 <- s0
   }
 
+  if (local) {wflow_copy_local(r)}
+
   # Step 2: Build HTML files----------------------------------------------------
 
   # Determine if there are any files to be built.
@@ -251,12 +254,14 @@ wflow_publish <- function(
     # In a dry run, some files may not actually exist yet. Also, not every Rmd
     # file creates figures, but it's easier to just attempt to add figures for
     # every file.
-    step3 <- wflow_git_commit_(files = files_to_commit, message = "Build site.",
+    step3 <- wflow_git_commit_(files = files_to_commit, message = paste0("Build site: ", message),
                           all = FALSE, force = force,
                           dry_run = dry_run, project = project)
   } else {
     step3 <- NULL
   }
+
+  if (local) {wflow_copy_local(r)}
 
   # Prepare output -------------------------------------------------------------
 
@@ -296,4 +301,27 @@ print.wflow_publish <- function(x, ...) {
   }
 
   return(invisible(x))
+}
+
+wflow_copy_local <- function(r) {
+
+  github <- wflow_options('_workflowr.yml')$github
+
+  head_sha <- git2r::commits(r)[[1]]$sha # full sha
+  target_dir <- fs::path_join(c(github, 'blob', head_sha))
+ 
+  if(!fs::dir_exists(target_dir)) {
+    fs::dir_create(target_dir)
+  }
+
+  all_git_files_df <- git2r::ls_tree(repo=r)
+  all_git_files_df$full_path <- paste0(all_git_files_df$path, all_git_files_df$name)
+
+  for (i in rownames(all_git_files_df)) {
+    file_path <- all_git_files_df[i, 'full_path']
+    # create target directory if needed
+    file_path_dir <- fs::dir_create(fs::path_join(c(target_dir, fs::path_dir(file_path))))
+    fs::file_copy(file_path, fs::path_join(c(file_path_dir, fs::path_file(file_path))), overwrite = TRUE)
+  }
+
 }

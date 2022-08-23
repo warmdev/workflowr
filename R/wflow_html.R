@@ -217,7 +217,7 @@ plot_hook <- function(x, options) {
   if (!is.null(output_dir)) {
     input <- file.path(output_dir, x)
   }
-
+  github <- wflow_options('_workflowr.yml')$github
   fig_versions <- get_versions_fig(fig = input, r = r, github = github)
 
   # Exit early if no previous versions of the figure are available

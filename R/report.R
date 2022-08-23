@@ -234,9 +234,9 @@ view the files as they were in that past version.
 # Get versions table for figures. Needs to be refactored to share code with
 # get_versions.
 get_versions_fig <- function(fig, r, github) {
-  fig <- relative(fig, start = git2r::workdir(r))
-
   df_versions <- get_versions_df(fig, r)
+
+  fig <- relative(fig, start = git2r::workdir(r))
 
   # Exit early if there are no past versions
   if (length(df_versions) == 0) {
@@ -251,7 +251,7 @@ get_versions_fig <- function(fig, r, github) {
                                    shorten_sha(df_versions$Version))
   }
 
-  df_versions <- df_versions[, c("Version", "Author", "Date")]
+  df_versions <- df_versions[, c("Version", "Author", "Date", "Message")]
 
   fig <- basename(fig)
   id <- paste0("fig-", tools::file_path_sans_ext(basename(fig)))
@@ -281,6 +281,7 @@ get_versions_fig <- function(fig, r, github) {
   <th>Version</th>
   <th>Author</th>
   <th>Date</th>
+  <th>Message</th>
   </tr>
   </thead>
   <tbody>
@@ -289,6 +290,7 @@ get_versions_fig <- function(fig, r, github) {
   <td>{{{Version}}}</td>
   <td>{{Author}}</td>
   <td>{{Date}}</td>
+  <td>{{Message}}</td>
   </tr>
   {{/df_versions}}
   </tbody>
